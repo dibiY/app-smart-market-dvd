@@ -38,7 +38,7 @@ function CircuitRow({ label, value, hexColor, rgbGlow, railClass }: CircuitRowPr
   return (
     <div className="relative select-none">
       {/* Row label */}
-      <div className="px-4 pt-1.5 pb-0.5">
+      <div className="px-4 pt-1 pb-0">
         <span className="font-share-tech text-[9px] tracking-[0.3em] text-steel/50 uppercase">
           {label}
         </span>
@@ -46,7 +46,7 @@ function CircuitRow({ label, value, hexColor, rgbGlow, railClass }: CircuitRowPr
 
       {/* Display panel */}
       <div
-        className={cn('relative flex items-center justify-end gap-1 px-4 py-2 border-l-4 bg-black/70 overflow-hidden', railClass)}
+        className={cn('relative flex items-center justify-end gap-1 px-4 py-1.5 border-l-4 bg-black/70 overflow-hidden', railClass)}
         style={{ boxShadow: `inset 0 0 40px rgba(${rgbGlow}, 0.06)` }}
       >
         {/* CRT scanlines */}

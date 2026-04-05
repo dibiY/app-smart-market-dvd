@@ -72,8 +72,16 @@ export default function MarketplacePage() {
           />
         </section>
 
-        {/* Cart sidebar — sticky, split layout: CartPanel shrinks, CartSummary fills remaining height */}
-        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:h-[calc(100vh-77px)] flex flex-col gap-3 overflow-hidden pb-3">
+        {/* Cart sidebar — sticky, split layout: CartPanel shrinks, CartSummary fills remaining height.
+             overflow-y-auto lets the sidebar itself scroll when the viewport is too short,
+             so the page never needs to scroll to see the Total. */}
+        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:h-[calc(100vh-73px)] flex flex-col gap-3 pb-3
+          lg:overflow-y-auto
+          [&::-webkit-scrollbar]:w-[3px]
+          [&::-webkit-scrollbar-track]:bg-transparent
+          [&::-webkit-scrollbar-thumb]:rounded-full
+          [&::-webkit-scrollbar-thumb]:bg-neon-blue/30
+          [&::-webkit-scrollbar-thumb:hover]:bg-neon-blue/60">
           {/* CartPanel: never grows, stays compact */}
           <div className="shrink-0">
             <CartPanel
@@ -92,14 +100,18 @@ export default function MarketplacePage() {
             />
           </div>
 
-          {/* CartSummary: fills all remaining height, handles its own internal scroll */}
+          {/* CartSummary: fills all remaining height.
+               min-h-[360px] is the hard floor — guarantees TimeCircuit never gets
+               clipped even when the viewport is short. If the aside cannot
+               accommodate that height, its own overflow-y-auto scrollbar allows
+               the user to scroll within the sidebar (not the whole page). */}
           {items.length > 0 && (
             <CartSummary
               priceBreakdown={priceBreakdown}
               isLoading={isPriceLoading}
               error={priceError}
               onRecalculate={recalculate}
-              className="flex-1 min-h-0"
+              className="flex-1 min-h-[360px]"
             />
           )}
         </aside>
