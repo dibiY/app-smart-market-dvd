@@ -1,13 +1,7 @@
 import type { Product, ProductCategory } from '../../domain/entities/Product';
+import type { ProductDto } from '../api/product.types';
 
-export interface ProductDto {
-  id: string | number;
-  title: string;
-  price: number;
-  category?: string;
-  description?: string;
-  image?: string;
-}
+export type { ProductDto };
 
 function detectCategory(title: string): ProductCategory {
   const lower = title.toLowerCase();
@@ -15,6 +9,18 @@ function detectCategory(title: string): ProductCategory {
     return 'bttf';
   }
   return 'other';
+}
+
+function detectSagaName(title: string, category: ProductCategory, apiSagaName?: string): string | undefined {
+  if (apiSagaName) return apiSagaName;
+  if (category === 'bttf') return 'BTTF';
+  const lower = title.toLowerCase();
+  if (lower.includes('star wars')) return 'Star Wars';
+  if (lower.includes('indiana jones')) return 'Indiana Jones';
+  if (lower.includes('terminator')) return 'Terminator';
+  if (lower.includes('alien')) return 'Alien';
+  if (lower.includes('matrix')) return 'Matrix';
+  return undefined;
 }
 
 function detectBttfPart(title: string): 1 | 2 | 3 | undefined {
@@ -26,17 +32,20 @@ function detectBttfPart(title: string): 1 | 2 | 3 | undefined {
 
 export const ProductMapper = {
   toDomain(dto: ProductDto): Product {
+    const title = dto.title ?? dto.name ?? '';
+    const imageUrl = dto.imageUrl ?? dto.image ?? dto.img ?? dto.poster;
     const category =
-      (dto.category as ProductCategory | undefined) ?? detectCategory(dto.title);
+      (dto.category as ProductCategory | undefined) ?? detectCategory(title);
 
     return {
       id: String(dto.id),
-      title: dto.title,
+      title,
       price: dto.price,
       category,
       description: dto.description,
-      imageUrl: dto.image,
-      bttfPart: category === 'bttf' ? detectBttfPart(dto.title) : undefined,
+      imageUrl,
+      bttfPart: category === 'bttf' ? detectBttfPart(title) : undefined,
+      sagaName: detectSagaName(title, category, dto.sagaName),
     };
   },
 };
