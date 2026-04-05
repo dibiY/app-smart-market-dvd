@@ -121,7 +121,14 @@ export function CartPanel({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-1.5">
+        <div
+          className="flex flex-col gap-1.5 overflow-y-auto max-h-[160px] pr-0.5
+            [&::-webkit-scrollbar]:w-[3px]
+            [&::-webkit-scrollbar-track]:bg-transparent
+            [&::-webkit-scrollbar-thumb]:rounded-full
+            [&::-webkit-scrollbar-thumb]:bg-neon-blue/25
+            [&::-webkit-scrollbar-thumb:hover]:bg-neon-blue/55"
+        >
           {items.map((item) => (
             <CartItemRow
               key={item.product.id}

@@ -72,16 +72,10 @@ export default function MarketplacePage() {
           />
         </section>
 
-        {/* Cart sidebar — 1/3 width, sticky on desktop, inner div scrolls */}
-        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:h-[calc(100vh-77px)] lg:overflow-hidden flex flex-col">
-          <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto flex flex-col gap-4 pb-6 pr-1
-            [&::-webkit-scrollbar]:w-1
-            [&::-webkit-scrollbar-track]:rounded-full
-            [&::-webkit-scrollbar-track]:bg-dark-border/20
-            [&::-webkit-scrollbar-thumb]:rounded-full
-            [&::-webkit-scrollbar-thumb]:bg-neon-blue/40
-            [&::-webkit-scrollbar-thumb:hover]:bg-neon-blue/70
-          ">
+        {/* Cart sidebar — sticky, split layout: CartPanel shrinks, CartSummary fills remaining height */}
+        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:h-[calc(100vh-77px)] flex flex-col gap-3 overflow-hidden pb-3">
+          {/* CartPanel: never grows, stays compact */}
+          <div className="shrink-0">
             <CartPanel
               items={items}
               totalItems={totalItems}
@@ -96,17 +90,18 @@ export default function MarketplacePage() {
               onRemove={removeItem}
               onClear={clearCart}
             />
-
-            {/* Billing summary — only shown when there are items */}
-            {items.length > 0 && (
-              <CartSummary
-                priceBreakdown={priceBreakdown}
-                isLoading={isPriceLoading}
-                error={priceError}
-                onRecalculate={recalculate}
-              />
-            )}
           </div>
+
+          {/* CartSummary: fills all remaining height, handles its own internal scroll */}
+          {items.length > 0 && (
+            <CartSummary
+              priceBreakdown={priceBreakdown}
+              isLoading={isPriceLoading}
+              error={priceError}
+              onRecalculate={recalculate}
+              className="flex-1 min-h-0"
+            />
+          )}
         </aside>
       </main>
 
