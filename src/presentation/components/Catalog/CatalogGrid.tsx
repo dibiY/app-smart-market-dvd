@@ -26,9 +26,6 @@ export function CatalogGrid({ products, isLoading, error, cartProductIds, onAdd 
     );
   }, [products, query]);
 
-  const bttfProducts = filtered.filter((p) => p.category === 'bttf');
-  const otherProducts = filtered.filter((p) => p.category === 'other');
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-20">
@@ -75,54 +72,22 @@ export function CatalogGrid({ products, isLoading, error, cartProductIds, onAdd 
         )}
       </div>
 
-      {/* BTTF Saga section */}
-      {bttfProducts.length > 0 && (
-        <section>
-          <div className="flex items-center gap-3 mb-3">
-            <h2 className="font-orbitron text-xs font-bold neon-orange tracking-[0.3em] uppercase">
-              ⚡ Saga Back to the Future
-            </h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-neon-orange/40 to-transparent" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {bttfProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                isInCart={cartProductIds.has(p.id)}
-                onAdd={onAdd}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Other films section */}
-      {otherProducts.length > 0 && (
-        <section>
-          <div className="flex items-center gap-3 mb-3">
-            <h2 className="font-orbitron text-xs font-bold neon-blue tracking-[0.3em] uppercase">
-              🎬 Autres Films
-            </h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-neon-blue/40 to-transparent" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {otherProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                isInCart={cartProductIds.has(p.id)}
-                onAdd={onAdd}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {filtered.length === 0 && (
+      {/* Flat product grid */}
+      {filtered.length === 0 ? (
         <p className="text-center text-steel/50 font-rajdhani py-10">
           Aucun film trouvé pour «{query}».
         </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+          {filtered.map((p) => (
+            <ProductCard
+              key={p.id}
+              product={p}
+              isInCart={cartProductIds.has(p.id)}
+              onAdd={onAdd}
+            />
+          ))}
+        </div>
       )}
     </div>
   );
