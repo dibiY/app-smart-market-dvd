@@ -1,20 +1,29 @@
 import { ApiClient } from '../api/ApiClient';
-import { ProductMapper, type ProductDto } from '../mappers/ProductMapper';
+import { ProductMapper } from '../mappers/ProductMapper';
+import type { ProductDto } from '../api/product.types';
 import { MOCK_PRODUCTS } from '../mocks/mockData';
 import type { Product } from '../../domain/entities/Product';
 import type { IProductService } from '../../domain/services/IProductService';
 
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
+
 export class ProductRepository implements IProductService {
   async getAll(): Promise<Product[]> {
-    try {
-      const dtos = await ApiClient.get<ProductDto[]>('/products');
-      return dtos.map(ProductMapper.toDomain);
-    } catch (err) {
+    if (USE_MOCK) {
       if (import.meta.env.DEV) {
-        console.warn('[ProductRepository] API unavailable — using mock data', err);
-        return MOCK_PRODUCTS;
+        console.info('[ProductRepository] VITE_USE_MOCK=true — using local mock data');
       }
-      throw err;
+      return MOCK_PRODUCTS;
     }
+
+    const dtos = await ApiClient.get<ProductDto[]>('/products');
+
+    if (import.meta.env.DEV) {
+      console.groupCollapsed('[ProductRepository] GET /products — raw API response');
+      console.table(dtos.slice(0, 5));
+      console.groupEnd();
+    }
+
+    return dtos.map(ProductMapper.toDomain);
   }
 }
