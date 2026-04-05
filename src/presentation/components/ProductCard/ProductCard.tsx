@@ -80,12 +80,12 @@ export function ProductCard({ product, isInCart, onAdd }: ProductCardProps) {
               {product.bttfPart && (
                 <Badge variant="orange">{BTTF_PART_LABELS[product.bttfPart]}</Badge>
               )}
-              <Badge variant="yellow">15 €</Badge>
+              <Badge variant="yellow">{product.price} €</Badge>
             </>
           ) : (
             <>
               <Badge variant="steel">DVD</Badge>
-              <Badge variant="blue">20 €</Badge>
+              <Badge variant="blue">{product.price} €</Badge>
             </>
           )}
         </div>
