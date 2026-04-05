@@ -15,18 +15,25 @@ function computeLocalPrice(items: CartItem[]): PriceBreakdown {
   const bttfSubtotal = bttfItems.reduce((sum, i) => sum + i.product.price * i.quantity, 0);
 
   let pct = 0;
-  let label = '';
+  let bttfCount = 0;
   if (distinctBttfIds.size >= 3) {
     pct = 20;
-    label = 'Saga BTTF Discount -20% (3 volets)';
+    bttfCount = 3;
   } else if (distinctBttfIds.size >= 2) {
     pct = 10;
-    label = 'Saga BTTF Discount -10% (2 volets)';
+    bttfCount = 2;
   }
+
+  // Resolve the saga name from the first discounted BTTF product
+  const sagaName =
+    bttfItems.length > 0 ? (bttfItems[0].product.sagaName ?? 'BTTF') : 'BTTF';
 
   const discounts: DiscountLine[] =
     pct > 0
-      ? [{ label, amount: Math.round(bttfSubtotal * pct) / 100 }]
+      ? [{
+          label: `Saga ${sagaName} Discount -${pct}% (${bttfCount} volet${bttfCount > 1 ? 's' : ''})`,
+          amount: Math.round(bttfSubtotal * pct) / 100,
+        }]
       : [];
 
   const total = subtotal - discounts.reduce((sum, d) => sum + d.amount, 0);
@@ -42,7 +49,7 @@ export class CartRepository implements ICartService {
 
     try {
       const response = await ApiClient.post<CartPriceResponse>('/cart/price', request);
-      return CartMapper.toDomain(response);
+      return CartMapper.toDomain(response, items);
     } catch (err) {
       // ── 404: product not recognized by the backend ─────────────────────
       if (err instanceof ApiError && err.isNotFound) {

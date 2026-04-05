@@ -83,9 +83,9 @@ export function CartSummary({
   const firstDiscount = priceBreakdown?.discounts[0];
 
   return (
-    <div className="flex flex-col gap-3 rounded border border-dark-border bg-dark-card overflow-hidden">
+    <div className="flex flex-col rounded border border-dark-border bg-dark-card overflow-hidden">
       {/* ── Panel header ────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-0">
+      <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <span className="font-orbitron text-[9px] tracking-[0.35em] text-steel/50 uppercase">
           Résumé de facturation
         </span>
@@ -101,15 +101,9 @@ export function CartSummary({
         </button>
       </div>
 
-      {/* ── BTTF discount hint ───────────────────────────────────────── */}
-      <div className="mx-4 rounded border border-neon-orange/20 bg-neon-orange/5 px-3 py-2 text-xs text-neon-orange/80 font-share-tech tracking-wide">
-        <span className="font-semibold">BTTF BONUS :</span>{' '}
-        2 volets différents → -10% · 3 volets → -20%
-      </div>
-
       {/* ── Error alert ─────────────────────────────────────────────── */}
       {error && (
-        <div className="mx-4 flex items-start gap-2 rounded border border-neon-red/30 bg-neon-red/5 px-3 py-2">
+        <div className="mx-3 mb-2 flex items-start gap-2 rounded border border-neon-red/30 bg-neon-red/5 px-3 py-2">
           <AlertTriangle size={13} className="text-neon-red mt-0.5 shrink-0" />
           <p className="font-share-tech text-xs text-neon-red leading-relaxed">
             {error.message}
@@ -119,7 +113,7 @@ export function CartSummary({
 
       {/* ── Per-line API breakdown ───────────────────────────────────── */}
       {hasLines && (
-        <div className="flex flex-col mx-2">
+        <div className="flex flex-col mx-2 mb-2">
           {/* Column headers */}
           <div className="flex items-center gap-2 px-2 pb-1 border-b border-dark-border/60">
             <span className="flex-1 font-share-tech text-[9px] tracking-widest text-steel/35 uppercase">Film</span>
@@ -128,9 +122,19 @@ export function CartSummary({
             <span className="font-share-tech text-[9px] tracking-widest text-steel/35 uppercase min-w-[4rem] text-right">Total</span>
           </div>
 
-          {priceBreakdown!.lines!.map((line) => (
-            <LineRow key={line.productId} line={line} />
-          ))}
+          {/* Scrollable line items */}
+          <div
+            className="overflow-y-auto max-h-40
+              [&::-webkit-scrollbar]:w-1
+              [&::-webkit-scrollbar-track]:bg-transparent
+              [&::-webkit-scrollbar-thumb]:rounded-full
+              [&::-webkit-scrollbar-thumb]:bg-neon-blue/30
+              [&::-webkit-scrollbar-thumb:hover]:bg-neon-blue/60"
+          >
+            {priceBreakdown!.lines!.map((line) => (
+              <LineRow key={line.productId} line={line} />
+            ))}
+          </div>
 
           {/* Subtotal row */}
           <div className="flex items-center justify-between px-2 pt-2 mt-1 border-t border-dark-border/60">
@@ -158,7 +162,7 @@ export function CartSummary({
       )}
 
       {/* ── Time Circuit (grand total) ────────────────────────────────── */}
-      <div className="px-4 pb-4">
+      <div className="px-3 pb-3 pt-2 border-t border-dark-border/60">
         <TimeCircuit
           subtotal={priceBreakdown?.subtotal ?? 0}
           discountAmount={totalDiscount}
