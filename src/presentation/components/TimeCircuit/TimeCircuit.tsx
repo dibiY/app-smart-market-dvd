@@ -7,7 +7,7 @@ function LedChar({ char, rgbGlow }: { char: string; rgbGlow: string }) {
     <span className="relative inline-block min-w-[0.55em] text-center">
       <span
         className="absolute inset-0 text-center select-none pointer-events-none"
-        style={{ color: `rgba(${rgbGlow}, 0.07)` }}
+        style={{ color: `rgba(${rgbGlow}, 0.08)` }}
         aria-hidden="true"
       >
         {/\d/.test(char) ? '8' : char}
@@ -17,46 +17,63 @@ function LedChar({ char, rgbGlow }: { char: string; rgbGlow: string }) {
   );
 }
 
-// ─── One column cell (SUBTOTAL | DISCOUNT | TOTAL) ────────────────────────
+// ─── One column cell ──────────────────────────────────────────────────────
 interface CircuitCellProps {
   label: string;
   value: string;
   hexColor: string;
   rgbGlow: string;
-  railClass: string;
-  /** TOTAL column is slightly larger */
+  /** Remove left border on the first (leftmost) cell to avoid double-border */
+  first?: boolean;
+  /** TOTAL column: larger digit + stronger glow */
   hero?: boolean;
 }
 
-function CircuitCell({ label, value, hexColor, rgbGlow, railClass, hero }: CircuitCellProps) {
+function CircuitCell({ label, value, hexColor, rgbGlow, first, hero }: CircuitCellProps) {
   return (
-    <div className={cn('relative flex flex-col select-none border-l-2', railClass)}>
+    <div className="relative flex flex-col flex-1 select-none overflow-hidden">
+      {/* Neon accent rail on the left edge (skipped for first cell) */}
+      {!first && (
+        <div
+          className="absolute left-0 inset-y-0 w-px z-20"
+          style={{
+            background: `linear-gradient(to bottom, transparent 5%, ${hexColor}55 35%, ${hexColor}77 65%, transparent 95%)`,
+          }}
+        />
+      )}
+
       {/* CRT scanlines overlay */}
       <div
         className="absolute inset-0 pointer-events-none z-10"
         style={{
           background:
-            'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px)',
+            'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px)',
         }}
       />
 
-      {/* Label */}
-      <div className="px-2 pt-1.5 pb-0.5">
-        <span className="font-share-tech text-[8px] tracking-[0.2em] text-steel/45 uppercase leading-none">
+      {/* ── Label area — fixed 2-line height so all columns stay flush ── */}
+      <div className="h-8 flex items-start px-2.5 pt-1.5 overflow-hidden shrink-0">
+        <span
+          className="font-share-tech text-[7.5px] tracking-[0.18em] text-steel/40 uppercase leading-tight line-clamp-2 cursor-default"
+          title={label}
+        >
           {label}
         </span>
       </div>
 
-      {/* Value */}
+      {/* ── Value area — flex-1 keeps all cells the same total height ── */}
       <div
-        className="flex items-baseline justify-end gap-0.5 px-2 pb-1.5 bg-black/60"
-        style={{ boxShadow: `inset 0 0 24px rgba(${rgbGlow}, 0.05)` }}
+        className="flex-1 flex items-center justify-end gap-0.5 px-2.5 pb-2 relative"
+        style={{
+          background: `linear-gradient(160deg, transparent 30%, rgba(${rgbGlow}, 0.05) 100%)`,
+          boxShadow: `inset 0 -10px 20px rgba(${rgbGlow}, 0.04)`,
+        }}
       >
         <span
-          className={cn('font-orbitron tracking-wider z-20', hero ? 'text-xl' : 'text-base')}
+          className={cn('font-orbitron tracking-wider z-20', hero ? 'text-[1.3rem]' : 'text-[1rem]')}
           style={{
             color: hexColor,
-            textShadow: `0 0 5px ${hexColor}, 0 0 12px rgba(${rgbGlow}, 0.4)`,
+            textShadow: `0 0 6px ${hexColor}, 0 0 ${hero ? 22 : 12}px rgba(${rgbGlow}, ${hero ? 0.6 : 0.4})`,
           }}
         >
           {value.split('').map((ch, i) => (
@@ -64,23 +81,13 @@ function CircuitCell({ label, value, hexColor, rgbGlow, railClass, hero }: Circu
           ))}
         </span>
         <span
-          className={cn('font-orbitron z-20 mb-px', hero ? 'text-xs' : 'text-[10px]')}
-          style={{ color: hexColor, opacity: 0.85 }}
+          className={cn('font-orbitron z-20 mb-0.5', hero ? 'text-[0.6rem]' : 'text-[0.55rem]')}
+          style={{ color: hexColor, opacity: 0.8 }}
         >
           €
         </span>
       </div>
     </div>
-  );
-}
-
-// ─── Vertical neon separator ──────────────────────────────────────────────
-function VSep({ color }: { color: string }) {
-  return (
-    <div
-      className="w-px self-stretch my-1.5 shrink-0"
-      style={{ background: `linear-gradient(to bottom, transparent, ${color}55, transparent)` }}
-    />
   );
 }
 
@@ -94,7 +101,6 @@ export interface TimeCircuitProps {
   className?: string;
 }
 
-/** Formats a number as a string with 2 decimal places. */
 function ledFmt(n: number, prefix = ''): string {
   return prefix + n.toFixed(2);
 }
@@ -112,17 +118,19 @@ export function TimeCircuit({
   return (
     <div className={cn('relative', className)}>
       {/* Outer frame */}
-      <div className="rounded-sm border border-dark-border bg-[#080812] overflow-hidden">
-
+      <div
+        className="rounded-sm border border-dark-border/80 bg-[#080812] overflow-hidden"
+        style={{ boxShadow: '0 0 18px rgba(0,212,255,0.05), inset 0 0 28px rgba(0,0,0,0.35)' }}
+      >
         {/* Header bar */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-[#0c0c1c] border-b border-dark-border">
-          <span className="font-orbitron text-[8px] tracking-[0.35em] text-steel/45 uppercase">
+        <div className="flex items-center justify-between px-3 py-1.5 bg-[#0c0c1c] border-b border-dark-border/70">
+          <span className="font-orbitron text-[7.5px] tracking-[0.35em] text-steel/40 uppercase">
             Time Circuit — Price Display
           </span>
           <div className="flex gap-1.5 items-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-neon-green" style={{ boxShadow: '0 0 5px #00ff88' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-neon-green"  style={{ boxShadow: '0 0 5px #00ff88' }} />
             <span className="w-1.5 h-1.5 rounded-full bg-neon-yellow" style={{ boxShadow: '0 0 5px #ffd700' }} />
-            <span className="w-1.5 h-1.5 rounded-full bg-neon-red"   style={{ boxShadow: '0 0 5px #ff3333' }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-neon-red"    style={{ boxShadow: '0 0 5px #ff3333' }} />
           </div>
         </div>
 
@@ -135,32 +143,25 @@ export function TimeCircuit({
           </div>
         ) : (
           /* ── Horizontal columns ──────────────────────────────────── */
-          <div className="flex items-stretch bg-[#080812]">
-
+          <div className="flex items-stretch divide-x divide-dark-border/40">
             {/* SUBTOTAL — yellow */}
             <CircuitCell
-              label="Sous-total"
+              label="Sous-total brut"
               value={ledFmt(subtotal)}
               hexColor="#ffd700"
               rgbGlow="255,215,0"
-              railClass="border-[#ffd700]/50 flex-1"
+              first
             />
 
+            {/* DISCOUNT — red (conditional) */}
             {hasDiscount && (
-              <>
-                <VSep color="#ff3333" />
-                {/* DISCOUNT — red */}
-                <CircuitCell
-                  label={discountLabel ?? 'DISCOUNT'}
-                  value={ledFmt(discountAmount, '-')}
-                  hexColor="#ff3333"
-                  rgbGlow="255,51,51"
-                  railClass="border-[#ff3333]/50 flex-1"
-                />
-              </>
+              <CircuitCell
+                label={discountLabel ?? 'Remise'}
+                value={ledFmt(discountAmount, '-')}
+                hexColor="#ff3333"
+                rgbGlow="255,51,51"
+              />
             )}
-
-            <VSep color="#00ff88" />
 
             {/* TOTAL — green hero */}
             <CircuitCell
@@ -168,7 +169,6 @@ export function TimeCircuit({
               value={ledFmt(total)}
               hexColor="#00ff88"
               rgbGlow="0,255,136"
-              railClass="border-[#00ff88]/60 flex-1"
               hero
             />
           </div>
