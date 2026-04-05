@@ -72,32 +72,41 @@ export default function MarketplacePage() {
           />
         </section>
 
-        {/* Cart sidebar — 1/3 width, sticky on desktop */}
-        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:self-start flex flex-col gap-4 max-h-[calc(100vh-77px)] overflow-y-auto pb-4">
-          <CartPanel
-            items={items}
-            totalItems={totalItems}
-            onIncrement={(id) => {
-              const item = items.find((i) => i.product.id === id);
-              if (item) updateQuantity(id, item.quantity + 1);
-            }}
-            onDecrement={(id) => {
-              const item = items.find((i) => i.product.id === id);
-              if (item) updateQuantity(id, item.quantity - 1);
-            }}
-            onRemove={removeItem}
-            onClear={clearCart}
-          />
-
-          {/* Billing summary — only shown when there are items */}
-          {items.length > 0 && (
-            <CartSummary
-              priceBreakdown={priceBreakdown}
-              isLoading={isPriceLoading}
-              error={priceError}
-              onRecalculate={recalculate}
+        {/* Cart sidebar — 1/3 width, sticky on desktop, inner div scrolls */}
+        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:h-[calc(100vh-77px)] lg:overflow-hidden flex flex-col">
+          <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto flex flex-col gap-4 pb-6 pr-1
+            [&::-webkit-scrollbar]:w-1
+            [&::-webkit-scrollbar-track]:rounded-full
+            [&::-webkit-scrollbar-track]:bg-dark-border/20
+            [&::-webkit-scrollbar-thumb]:rounded-full
+            [&::-webkit-scrollbar-thumb]:bg-neon-blue/40
+            [&::-webkit-scrollbar-thumb:hover]:bg-neon-blue/70
+          ">
+            <CartPanel
+              items={items}
+              totalItems={totalItems}
+              onIncrement={(id) => {
+                const item = items.find((i) => i.product.id === id);
+                if (item) updateQuantity(id, item.quantity + 1);
+              }}
+              onDecrement={(id) => {
+                const item = items.find((i) => i.product.id === id);
+                if (item) updateQuantity(id, item.quantity - 1);
+              }}
+              onRemove={removeItem}
+              onClear={clearCart}
             />
-          )}
+
+            {/* Billing summary — only shown when there are items */}
+            {items.length > 0 && (
+              <CartSummary
+                priceBreakdown={priceBreakdown}
+                isLoading={isPriceLoading}
+                error={priceError}
+                onRecalculate={recalculate}
+              />
+            )}
+          </div>
         </aside>
       </main>
 
