@@ -4,6 +4,7 @@ import { useProducts } from '../../application/hooks/useProducts';
 import { useCart } from '../../application/hooks/useCart';
 import { CatalogGrid } from '../components/Catalog/CatalogGrid';
 import { CartPanel } from '../components/CartPanel/CartPanel';
+import { CartSummary } from '../components/CartSummary/CartSummary';
 
 export default function MarketplacePage() {
   const { data: products = [], isLoading, error } = useProducts();
@@ -12,6 +13,8 @@ export default function MarketplacePage() {
     totalItems,
     priceBreakdown,
     isPriceLoading,
+    priceError,
+    recalculate,
     addItem,
     removeItem,
     updateQuantity,
@@ -48,7 +51,8 @@ export default function MarketplacePage() {
           <div className="flex items-center gap-2">
             {totalItems > 0 && (
               <span className="font-orbitron text-[10px] tracking-widest text-neon-blue/70">
-                {totalItems} article{totalItems > 1 ? 's' : ''} — {priceBreakdown ? `${priceBreakdown.total.toFixed(2)} €` : '...'}
+                {totalItems} article{totalItems > 1 ? 's' : ''}{' '}
+                {priceBreakdown ? `— ${priceBreakdown.total.toFixed(2)} €` : isPriceLoading ? '— ...' : ''}
               </span>
             )}
           </div>
@@ -69,12 +73,10 @@ export default function MarketplacePage() {
         </section>
 
         {/* Cart sidebar — 1/3 width, sticky on desktop */}
-        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:self-start">
+        <aside className="mt-8 lg:mt-0 lg:sticky lg:top-[61px] lg:self-start flex flex-col gap-4 max-h-[calc(100vh-77px)] overflow-y-auto pb-4">
           <CartPanel
             items={items}
             totalItems={totalItems}
-            priceBreakdown={priceBreakdown}
-            isPriceLoading={isPriceLoading}
             onIncrement={(id) => {
               const item = items.find((i) => i.product.id === id);
               if (item) updateQuantity(id, item.quantity + 1);
@@ -86,6 +88,16 @@ export default function MarketplacePage() {
             onRemove={removeItem}
             onClear={clearCart}
           />
+
+          {/* Billing summary — only shown when there are items */}
+          {items.length > 0 && (
+            <CartSummary
+              priceBreakdown={priceBreakdown}
+              isLoading={isPriceLoading}
+              error={priceError}
+              onRecalculate={recalculate}
+            />
+          )}
         </aside>
       </main>
 

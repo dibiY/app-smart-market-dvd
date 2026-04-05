@@ -1,25 +1,48 @@
-import { useState, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useCallback, useEffect } from 'react';
 import type { Product } from '../../domain/entities/Product';
 import type { CartItem } from '../../domain/entities/Cart';
-import { calculateCartPriceUseCase } from '../di';
+import { useCalculatePrice } from './useCalculatePrice';
+
+/** Debounce delay in ms before triggering a price recalculation after a cart change. */
+const DEBOUNCE_MS = 600;
 
 export function useCart() {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Stable serialized key so TanStack Query re-fetches on any change
+  const {
+    mutate,
+    data: priceBreakdown,
+    isPending,
+    error,
+    reset,
+  } = useCalculatePrice();
+
+  // Stable fingerprint of the cart — only re-triggers the effect when
+  // the actual basket content changes (not on every unrelated render).
   const cartKey = items
     .map((i) => `${i.product.id}:${i.quantity}`)
     .sort()
     .join(',');
 
-  const priceQuery = useQuery({
-    queryKey: ['cart-price', cartKey],
-    queryFn: () => calculateCartPriceUseCase.execute(items),
-    enabled: items.length > 0,
-    staleTime: 0,
-    placeholderData: undefined,
-  });
+  /**
+   * Debounced auto-recalculation.
+   * Any cart mutation cancels the previous pending timer and schedules a fresh
+   * API call 600ms later, preventing a flood of requests while the user is
+   * rapidly adding / removing items.
+   */
+  useEffect(() => {
+    if (items.length === 0) {
+      reset(); // clear stale price when cart is emptied
+      return;
+    }
+    const timer = setTimeout(() => mutate(items), DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+    // cartKey guarantees a stable identity of the cart content.
+    // mutate and reset are stable references from TanStack Query v5.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartKey, mutate, reset]);
+
+  // ── Cart mutations ──────────────────────────────────────────────────────
 
   const addItem = useCallback((product: Product) => {
     setItems((prev) => {
@@ -47,17 +70,25 @@ export function useCart() {
     );
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    reset();
+  }, [reset]);
+
+  /** Manually trigger a price recalculation (e.g. "Recalculer" button). */
+  const recalculate = useCallback(() => {
+    if (items.length > 0) mutate(items);
+  }, [items, mutate]);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const priceBreakdown = items.length === 0 ? undefined : priceQuery.data;
 
   return {
     items,
     totalItems,
-    priceBreakdown,
-    isPriceLoading: priceQuery.isFetching,
-    priceError: priceQuery.error,
+    priceBreakdown: items.length === 0 ? undefined : priceBreakdown,
+    isPriceLoading: isPending,
+    priceError: error as Error | null,
+    recalculate,
     addItem,
     removeItem,
     updateQuantity,

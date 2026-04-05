@@ -1,9 +1,7 @@
 import { Minus, Plus, Trash2, Tag } from 'lucide-react';
-import type { PriceBreakdown } from '../../../domain/entities/PriceBreakdown';
 import type { CartItem } from '../../../domain/entities/Cart';
 import { Button } from '../ui/Button';
-import { TimeCircuit } from '../TimeCircuit/TimeCircuit';
-import { cn } from '../../../lib/utils';
+import { cn } from '@/lib/utils';
 
 // ─── Single line item ─────────────────────────────────────────────────────
 interface CartItemRowProps {
@@ -52,7 +50,10 @@ function CartItemRow({ item, onIncrement, onDecrement, onRemove }: CartItemRowPr
 
       {/* Line total */}
       <span
-        className={cn('font-orbitron text-sm min-w-[3.5rem] text-right', isBttf ? 'text-neon-orange' : 'text-neon-blue')}
+        className={cn(
+          'font-orbitron text-sm min-w-[3.5rem] text-right',
+          isBttf ? 'text-neon-orange' : 'text-neon-blue',
+        )}
       >
         {(item.product.price * item.quantity).toFixed(2)} €
       </span>
@@ -69,12 +70,11 @@ function CartItemRow({ item, onIncrement, onDecrement, onRemove }: CartItemRowPr
   );
 }
 
-// ─── Smart search input ───────────────────────────────────────────────────
+// ─── Cart item list panel ─────────────────────────────────────────────────
+
 export interface CartPanelProps {
   items: CartItem[];
   totalItems: number;
-  priceBreakdown?: PriceBreakdown;
-  isPriceLoading: boolean;
   onIncrement: (productId: string) => void;
   onDecrement: (productId: string) => void;
   onRemove: (productId: string) => void;
@@ -84,18 +84,12 @@ export interface CartPanelProps {
 export function CartPanel({
   items,
   totalItems,
-  priceBreakdown,
-  isPriceLoading,
   onIncrement,
   onDecrement,
   onRemove,
   onClear,
 }: CartPanelProps) {
   const isEmpty = items.length === 0;
-
-  // Discount aggregate
-  const totalDiscount = (priceBreakdown?.discounts ?? []).reduce((s, d) => s + d.amount, 0);
-  const firstDiscount = priceBreakdown?.discounts[0];
 
   return (
     <div className="flex flex-col gap-4">
@@ -139,24 +133,7 @@ export function CartPanel({
           ))}
         </div>
       )}
-
-      {/* Discount hint */}
-      {!isEmpty && (
-        <div className="rounded border border-neon-orange/20 bg-neon-orange/5 px-3 py-2 text-xs text-neon-orange/80 font-share-tech tracking-wide">
-          <span className="font-semibold">BTTF BONUS :</span> 2 volets différents → -10% · 3 volets → -20%
-        </div>
-      )}
-
-      {/* Time Circuit price display */}
-      {!isEmpty && (
-        <TimeCircuit
-          subtotal={priceBreakdown?.subtotal ?? 0}
-          discountAmount={totalDiscount}
-          discountLabel={firstDiscount?.label?.toUpperCase()}
-          total={priceBreakdown?.total ?? 0}
-          isLoading={isPriceLoading}
-        />
-      )}
     </div>
   );
 }
+
