@@ -19,4 +19,9 @@ export interface ProductDto {
   poster?: string;
   /** Optional saga/franchise name sent by the API */
   sagaName?: string;
+  /**
+   * Opaque promotion-group identifier from the API (e.g. "BTTF", "STAR_WARS").
+   * When present it is passed through to the domain entity as-is.
+   */
+  sagaId?: string;
 }

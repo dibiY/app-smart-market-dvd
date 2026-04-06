@@ -46,6 +46,7 @@ export const ProductMapper = {
       imageUrl,
       bttfPart: category === 'bttf' ? detectBttfPart(title) : undefined,
       sagaName: detectSagaName(title, category, dto.sagaName),
+      sagaId: dto.sagaId,
     };
   },
 };

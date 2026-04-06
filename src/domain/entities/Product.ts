@@ -11,4 +11,9 @@ export interface Product {
   bttfPart?: 1 | 2 | 3;
   /** Name of the saga/franchise this product belongs to, e.g. "BTTF", "Star Wars" */
   sagaName?: string;
+  /**
+   * Opaque identifier for the promotion group this product belongs to.
+   * Used by the backend discount engine. Matches sagaName when present.
+   */
+  sagaId?: string;
 }
