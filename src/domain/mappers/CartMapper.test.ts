@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { CartMapper } from './CartMapper';
 import type { CartItem } from '../entities/Cart';
 import type { Product } from '../entities/Product';
@@ -178,5 +178,122 @@ describe('CartMapper.toDomain', () => {
     // saved = 30 - 27 = 3
     expect(result.discounts[0].amount).toBe(3);
     expect(result.total).toBe(27);
+  });
+});
+
+// ─── CartMapper.toDomain — resolveSagaName fallback paths ─────────────────
+describe('CartMapper.toDomain — resolveSagaName fallback (no cart items)', () => {
+  function discountedResponse(productName: string) {
+    return {
+      lines: [
+        {
+          productId: 'p1',
+          productName,
+          quantity: 2,
+          unitPrice: 15,
+          lineTotal: 24,
+          discountRate: 20,
+          currency: 'EUR',
+        },
+      ],
+      total: 24,
+      currency: 'EUR',
+    };
+  }
+
+  it('detects BTTF from "Back to the Future" product name', () => {
+    const result = CartMapper.toDomain(discountedResponse('Back to the Future Part II'));
+    expect(result.discounts[0].label).toContain('BTTF');
+  });
+
+  it('detects BTTF from French product name "Retour vers le futur"', () => {
+    const result = CartMapper.toDomain(discountedResponse('Retour vers le futur III'));
+    expect(result.discounts[0].label).toContain('BTTF');
+  });
+
+  it('detects Star Wars from product name', () => {
+    const result = CartMapper.toDomain(discountedResponse('Star Wars: A New Hope'));
+    expect(result.discounts[0].label).toContain('Star Wars');
+  });
+
+  it('detects Terminator from product name', () => {
+    const result = CartMapper.toDomain(discountedResponse('Terminator 2: Judgment Day'));
+    expect(result.discounts[0].label).toContain('Terminator');
+  });
+
+  it('returns generic label when franchise is unrecognized', () => {
+    const result = CartMapper.toDomain(discountedResponse('Some Random Film'));
+    expect(result.discounts[0].label).toMatch(/^Discount -20%/);
+    expect(result.discounts[0].label).not.toContain('Saga');
+  });
+
+  it('returns generic label when lines belong to mixed unrecognized franchises', () => {
+    const response = {
+      lines: [
+        { productId: 'p1', productName: 'Star Wars: A New Hope', quantity: 1, unitPrice: 15, lineTotal: 12, discountRate: 20, currency: 'EUR' },
+        { productId: 'p2', productName: 'Terminator 2', quantity: 1, unitPrice: 15, lineTotal: 12, discountRate: 20, currency: 'EUR' },
+      ],
+      total: 24,
+      currency: 'EUR',
+    };
+    // Both lines are in the same 20%-group but different franchises → null
+    const result = CartMapper.toDomain(response);
+    expect(result.discounts[0].label).toMatch(/^Discount -20%/);
+  });
+});
+
+describe('CartMapper.toDomain — resolveSagaName with multiple saga names', () => {
+  it('falls through to name-based detection when CartItems contain two different sagas', () => {
+    // Both have sagaName but they differ → sagas.size > 1 → regex fallback
+    const response = {
+      lines: [
+        { productId: 'p1', productName: 'Star Wars Episode IV', quantity: 1, unitPrice: 15, lineTotal: 12, discountRate: 20, currency: 'EUR' },
+        { productId: 'p2', productName: 'Star Wars Episode V', quantity: 1, unitPrice: 15, lineTotal: 12, discountRate: 20, currency: 'EUR' },
+      ],
+      total: 24,
+      currency: 'EUR',
+    };
+    // Provide items where each product has a DIFFERENT sagaName
+    const items = [
+      { product: { id: 'p1', title: 'SW IV', price: 15, category: 'other', sagaName: 'Star Wars' }, quantity: 1 },
+      { product: { id: 'p2', title: 'SW V', price: 15, category: 'other', sagaName: 'Terminator' }, quantity: 1 },
+    ];
+    const result = CartMapper.toDomain(response, items);
+    // sagas.size === 2 → regex fallback → both names match Star Wars pattern
+    expect(result.discounts[0].label).toContain('Star Wars');
+  });
+});
+
+// ─── CartMapper.toDomain — VITE_PRICES_IN_CENTS ───────────────────────────
+describe('CartMapper.toDomain — VITE_PRICES_IN_CENTS', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('divides all prices by 100 when VITE_PRICES_IN_CENTS is true', () => {
+    vi.stubEnv('VITE_PRICES_IN_CENTS', 'true');
+    const response = {
+      lines: [
+        { productId: 'p1', productName: 'Film', quantity: 1, unitPrice: 1500, lineTotal: 1500, discountRate: 0, currency: 'EUR' },
+      ],
+      total: 1500,
+      currency: 'EUR',
+    };
+    const result = CartMapper.toDomain(response);
+    expect(result.subtotal).toBe(15);
+    expect(result.total).toBe(15);
+    expect(result.lines[0].unitPrice).toBe(15);
+  });
+
+  it('keeps prices as-is when VITE_PRICES_IN_CENTS is absent', () => {
+    vi.stubEnv('VITE_PRICES_IN_CENTS', '');
+    const response = {
+      lines: [
+        { productId: 'p1', productName: 'Film', quantity: 1, unitPrice: 15, lineTotal: 15, discountRate: 0, currency: 'EUR' },
+      ],
+      total: 15,
+      currency: 'EUR',
+    };
+    const result = CartMapper.toDomain(response);
+    expect(result.subtotal).toBe(15);
+    expect(result.total).toBe(15);
   });
 });
