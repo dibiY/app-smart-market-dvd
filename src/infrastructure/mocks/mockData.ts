@@ -31,6 +31,7 @@ export const MOCK_PRODUCTS: Product[] = [
     title: 'Star Wars: A New Hope',
     price: 20,
     category: 'other',
+    sagaName: 'Star Wars',
     description: 'The Rebel Alliance must destroy the Death Star with the help of Luke Skywalker.',
   },
   {
@@ -38,6 +39,7 @@ export const MOCK_PRODUCTS: Product[] = [
     title: 'Terminator 2: Judgment Day',
     price: 20,
     category: 'other',
+    sagaName: 'Terminator',
     description: 'A reprogrammed Terminator must protect John Connor from a liquid-metal T-1000.',
   },
   {
@@ -45,6 +47,7 @@ export const MOCK_PRODUCTS: Product[] = [
     title: 'Ghostbusters',
     price: 20,
     category: 'other',
+    // no sagaName → goes to "Autres produits"
     description: 'Three parapsychology professors set up a ghost-catching business in New York City.',
   },
   {
@@ -52,6 +55,7 @@ export const MOCK_PRODUCTS: Product[] = [
     title: 'RoboCop',
     price: 20,
     category: 'other',
+    // no sagaName → goes to "Autres produits"
     description: 'In a crime-ridden Detroit, a murdered cop is resurrected as a powerful cyborg.',
   },
   {
@@ -59,6 +63,7 @@ export const MOCK_PRODUCTS: Product[] = [
     title: 'Blade Runner',
     price: 20,
     category: 'other',
+    // no sagaName → goes to "Autres produits"
     description: 'A blade runner must pursue and terminate replicants who have escaped from the off world colonies.',
   },
 ];

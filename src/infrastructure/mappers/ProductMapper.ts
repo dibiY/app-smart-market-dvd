@@ -11,15 +11,20 @@ function detectCategory(title: string): ProductCategory {
   return 'other';
 }
 
-function detectSagaName(title: string, category: ProductCategory, apiSagaName?: string): string | undefined {
+/**
+ * Resolves the saga name for a product.
+ *
+ * Priority:
+ *   1. dto.sagaName  — explicit API/DB value (most authoritative)
+ *   2. category 'bttf' — confirmed DB category, always means BTTF franchise
+ *
+ * Title-based guessing is intentionally NOT performed: if the backend does
+ * not tag a product as belonging to a saga, it must appear in "Autres produits"
+ * regardless of what words appear in the title.
+ */
+function resolveSagaName(category: ProductCategory, apiSagaName?: string): string | undefined {
   if (apiSagaName) return apiSagaName;
   if (category === 'bttf') return 'BTTF';
-  const lower = title.toLowerCase();
-  if (lower.includes('star wars')) return 'Star Wars';
-  if (lower.includes('indiana jones')) return 'Indiana Jones';
-  if (lower.includes('terminator')) return 'Terminator';
-  if (lower.includes('alien')) return 'Alien';
-  if (lower.includes('matrix')) return 'Matrix';
   return undefined;
 }
 
@@ -45,7 +50,7 @@ export const ProductMapper = {
       description: dto.description,
       imageUrl,
       bttfPart: category === 'bttf' ? detectBttfPart(title) : undefined,
-      sagaName: detectSagaName(title, category, dto.sagaName),
+      sagaName: resolveSagaName(category, dto.sagaName),
       sagaId: dto.sagaId,
     };
   },
