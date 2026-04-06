@@ -1,0 +1,19 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.test.yml — test / CI environment
+#
+# Builds a static bundle in Vite 'test' mode, served by nginx.
+# Mock data enabled so tests never depend on a real backend.
+# sourcemap=true is kept for easier debugging of test failures.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  app:
+    build:
+      target: runner
+      args:
+        VITE_MODE: test
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        VITE_USE_MOCK: "true"
+        VITE_PRICES_IN_CENTS: ${VITE_PRICES_IN_CENTS:-false}
+    image: smart-market-dvd:test
+    ports:
+      - "8080:80"

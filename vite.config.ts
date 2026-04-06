@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { fileURLToPath, URL } from 'node:url';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
 
   resolve: {
@@ -21,7 +21,9 @@ export default defineConfig({
 
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Sourcemaps enabled for all environments except production to keep
+    // the bundle lean and avoid exposing source code in prod.
+    sourcemap: mode !== 'production',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -37,4 +39,4 @@ export default defineConfig({
     setupFiles: ['./src/setupTests.ts'],
     css: true,
   },
-});
+}));

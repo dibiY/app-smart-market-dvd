@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.yml — base configuration (do not use standalone)
+#
+# Usage — always combine with an environment override:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml   up
+#   docker compose -f docker-compose.yml -f docker-compose.test.yml    up
+#   docker compose -f docker-compose.yml -f docker-compose.recette.yml up
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml    up
+#
+# Or use the short npm scripts defined in package.json:
+#   npm run docker:local
+#   npm run docker:test
+#   npm run docker:recette
+#   npm run docker:prod
+# ─────────────────────────────────────────────────────────────────────────────
+name: smart-market-dvd
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    labels:
+      com.smart-market-dvd.app: "true"

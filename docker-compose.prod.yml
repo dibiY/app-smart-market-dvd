@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.prod.yml — production environment
+#
+# Source maps are disabled in production to reduce bundle size and avoid
+# exposing source code.
+# VITE_API_URL must be set explicitly — no default allowed in prod.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  app:
+    build:
+      target: runner
+      args:
+        VITE_MODE: production
+        VITE_API_URL: ${VITE_API_URL:?VITE_API_URL is required for production}
+        VITE_USE_MOCK: "false"
+        VITE_PRICES_IN_CENTS: ${VITE_PRICES_IN_CENTS:-false}
+    image: smart-market-dvd:prod
+    ports:
+      - "80:80"
+    env_file:
+      - path: .env.production
+        required: false

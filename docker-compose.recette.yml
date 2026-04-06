@@ -1,0 +1,22 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.recette.yml — staging / recette environment
+#
+# Builds against the recette backend URL.
+# Real API is used (VITE_USE_MOCK=false).
+# Source maps are kept for easier debugging on staging.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  app:
+    build:
+      target: runner
+      args:
+        VITE_MODE: recette
+        VITE_API_URL: ${VITE_API_URL:?VITE_API_URL is required for recette}
+        VITE_USE_MOCK: "false"
+        VITE_PRICES_IN_CENTS: ${VITE_PRICES_IN_CENTS:-false}
+    image: smart-market-dvd:recette
+    ports:
+      - "8081:80"
+    env_file:
+      - path: .env.recette
+        required: false

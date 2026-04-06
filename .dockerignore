@@ -1,0 +1,41 @@
+# dependencies — rebuilt inside the container
+node_modules
+.pnp
+.pnp.js
+
+# build output — produced by the builder stage
+dist
+build
+
+# test / coverage artefacts
+coverage
+*.lcov
+
+# local env files — injected at runtime via docker-compose, never baked in
+.env*.local
+.env.development
+.env.test
+.env.recette
+.env.production
+
+# editor & OS
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+Thumbs.db
+
+# git
+.git
+.gitignore
+
+# docker files themselves (no need to copy into the image)
+Dockerfile
+docker-compose*.yml
+docker/
+
+# CI / misc
+*.log
+npm-debug.log*
+yarn-debug.log*

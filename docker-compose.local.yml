@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# docker-compose.local.yml — local development (Vite hot-reload)
+#
+# The source directory is bind-mounted so edits are reflected instantly.
+# node_modules live inside an anonymous volume to prevent the host copy
+# from shadowing the container's packages.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  app:
+    build:
+      target: dev          # Uses the lightweight 'dev' stage (no copy of src)
+    image: smart-market-dvd:local
+    volumes:
+      - .:/app             # Live source mount
+      - /app/node_modules  # Isolate container node_modules from host
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+      - VITE_USE_MOCK=${VITE_USE_MOCK:-true}
+      - VITE_PRICES_IN_CENTS=${VITE_PRICES_IN_CENTS:-false}
+    env_file:
+      - path: .env.local
+        required: false    # Optional — falls back to 'environment' block above
