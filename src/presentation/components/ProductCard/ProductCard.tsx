@@ -131,6 +131,26 @@ const DEFAULT_SAGA_THEME: SagaCardTheme = {
   cornerFilter: 'drop-shadow(0 0 4px #00d4ff)',
 };
 
+/**
+ * Palette used for dynamic assignment of unknown sagas.
+ * Cycles deterministically based on a hash of the saga name so the same
+ * saga always gets the same color across renders/sessions.
+ */
+const DYNAMIC_PALETTE: SagaCardTheme[] = [
+  DEFAULT_SAGA_THEME,
+  SAGA_CARD_THEMES['Star Wars'],
+  SAGA_CARD_THEMES['Terminator'],
+  SAGA_CARD_THEMES['Alien'],
+  SAGA_CARD_THEMES['BTTF'],
+];
+
+/** djb2-style hash → stable index into DYNAMIC_PALETTE */
+function hashSagaName(name: string): number {
+  let h = 5381;
+  for (let i = 0; i < name.length; i++) h = (h * 33) ^ name.charCodeAt(i);
+  return Math.abs(h) % DYNAMIC_PALETTE.length;
+}
+
 /** Neutral theme for products that belong to no saga */
 const NO_SAGA_THEME: SagaCardTheme = {
   cardBorder: 'border-dark-border',
@@ -149,7 +169,10 @@ const NO_SAGA_THEME: SagaCardTheme = {
 
 function getTheme(sagaName: string | undefined): SagaCardTheme {
   if (!sagaName) return NO_SAGA_THEME;
-  return SAGA_CARD_THEMES[sagaName] ?? DEFAULT_SAGA_THEME;
+  // Known saga → specific branded color
+  if (SAGA_CARD_THEMES[sagaName]) return SAGA_CARD_THEMES[sagaName];
+  // Unknown saga from API → deterministic neon color from palette (always distinct from NO_SAGA)
+  return DYNAMIC_PALETTE[hashSagaName(sagaName)];
 }
 
 const BTTF_PART_LABELS: Record<number, string> = {
