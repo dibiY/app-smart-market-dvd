@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import type { Product } from '../../../domain/entities/Product';
+import { groupProductsBySaga } from '../../../domain/utils/groupProductsBySaga';
 import { ProductCard } from '../ProductCard/ProductCard';
 import { Spinner } from '../ui/Spinner';
 import { cn } from '@/lib/utils';
@@ -128,32 +129,15 @@ export function CatalogGrid({ products, isLoading, error, cartProductIds, onAdd 
         p.title.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q) ||
         (p.sagaName?.toLowerCase().includes(q)) ||
+        (p.sagaId?.toLowerCase().includes(q)) ||
         (p.bttfPart !== undefined && `part ${p.bttfPart}`.includes(q)),
     );
   }, [products, query]);
 
-  // Group into saga sections + a no-saga bucket
-  const { sagaGroups, noSagaProducts } = useMemo(() => {
-    const groupMap = new Map<string, Product[]>();
-    const noSaga: Product[] = [];
-    for (const p of filtered) {
-      if (p.sagaName) {
-        if (!groupMap.has(p.sagaName)) groupMap.set(p.sagaName, []);
-        groupMap.get(p.sagaName)!.push(p);
-      } else {
-        noSaga.push(p);
-      }
-    }
-    // BTTF first, then alphabetical
-    const groups = Array.from(groupMap.entries()).sort(([a], [b]) => {
-      if (a === 'BTTF') return -1;
-      if (b === 'BTTF') return 1;
-      return a.localeCompare(b);
-    });
-    return { sagaGroups: groups, noSagaProducts: noSaga };
-  }, [filtered]);
+  // Delegate grouping logic to the domain utility (pure function, no side effects)
+  const groups = useMemo(() => groupProductsBySaga(filtered), [filtered]);
 
-  const isEmpty = sagaGroups.length === 0 && noSagaProducts.length === 0;
+  const isEmpty = groups.length === 0;
 
   if (isLoading) {
     return (
@@ -207,14 +191,18 @@ export function CatalogGrid({ products, isLoading, error, cartProductIds, onAdd 
         </p>
       ) : (
         <>
-          {/* ── Saga sections ───────────────────────────────────────── */}
-          {sagaGroups.map(([sagaName, sagaProducts]) => {
-            const accent = SAGA_ACCENTS[sagaName] ?? DEFAULT_SAGA_ACCENT;
+          {groups.map((group) => {
+            const isVirtual = group.isVirtual;
+            const label = isVirtual ? 'Autres produits' : group.sagaName;
+            const accent = isVirtual
+              ? NO_SAGA_ACCENT
+              : (SAGA_ACCENTS[group.sagaName] ?? DEFAULT_SAGA_ACCENT);
+
             return (
-              <section key={sagaName}>
-                <SectionHeader label={sagaName} count={sagaProducts.length} accent={accent} />
+              <section key={group.sagaName}>
+                <SectionHeader label={label} count={group.products.length} accent={accent} />
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {sagaProducts.map((p) => (
+                  {group.products.map((p) => (
                     <ProductCard
                       key={p.id}
                       product={p}
@@ -226,27 +214,6 @@ export function CatalogGrid({ products, isLoading, error, cartProductIds, onAdd 
               </section>
             );
           })}
-
-          {/* ── Non-saga products ────────────────────────────────────── */}
-          {noSagaProducts.length > 0 && (
-            <section>
-              <SectionHeader
-                label="Autres Films"
-                count={noSagaProducts.length}
-                accent={NO_SAGA_ACCENT}
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {noSagaProducts.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    isInCart={cartProductIds.has(p.id)}
-                    onAdd={onAdd}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
         </>
       )}
     </div>
